@@ -1,4 +1,0 @@
-intron_annotations: # use yaml list to specify multiple annotations
-    - 'resources/gencode_v43_plus_v37_productive.intron_by_transcript_BEDlike.txt.gz'
-    # - 'resources/gencode/basic_annotated_introns.txt.gz'
-
