@@ -1426,6 +1426,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-N",
         "--max_juncs",
         dest="max_juncs",
         metavar='N',
