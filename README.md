@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This script takes junction files (e.g., produced by regtools) as input and constructs intron clusters from them. Then, it processes the intron clusters to identify rarely spliced introns based on certain filtering cut-offs. The output is a text file that follows the same format as the standard leafcutter tool. The first column of each row shows the genome coordinates of introns and labels them as UP[: unproductive] or PR[: productive/protein-coding].
+This script takes junction files (e.g., produced by regtools) as input and constructs intron clusters from them. Then, it processes the intron clusters to identify rarely spliced introns based on certain filtering cut-offs. The output is a text file that follows the same format as the standard leafcutter tool. The first column of each row shows the genome coordinates of introns and labels them as **UP** (unproductive), **PR** (productive/protein-coding), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
 
 
 Main input files:
