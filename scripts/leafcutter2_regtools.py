@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 
-__author__ = "Yang Li, Chao Dai, Quinn Hauck"
+__author__ = "Yang Li, Chao Dai, Quinn Hauck, Carlos Buen Abad Najar"
 __status__ = "Development"
-__version__ = "v2.0.0"
+__version__ = "v2.0.1"
 
 import argparse
 import gzip
@@ -15,7 +15,6 @@ import tempfile
 from statistics import mean, median, stdev
 from datetime import datetime
 
-import BackwardSpliceJunctionClassifier as sjcb
 import ForwardSpliceJunctionClassifier as sjcf
 import pandas as pd
 import pyfastx
@@ -1020,29 +1019,6 @@ def get_numers(options):
     sys.stderr.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} done.\n")
 
 
-# def loadIntronAnnotations(fn):
-#     """parse and load intron annotations from a single file"""
-#
-#     dic_noise = (
-#         {}
-#     )  # noisy intron annotation: { k=(chr, start, end, strand) : v=classfication }
-#     if fn[-3:] == ".gz":
-#         for ln in gzip.open(fn):
-#             chrom, s, e, strand, classification = ln.decode().split()
-#             # dic_noise[(chrom,int(s)-1,int(e),strand)] = classification # intron annotation
-#             dic_noise[(chrom, int(s), int(e), strand)] = (
-#                 classification  # intron annotation
-#             )
-#     else:
-#         for ln in open(fn):
-#             if type(ln) == bytes:
-#                 ln = ln.decode("utf-8")  # convert bytes to string
-#             chrom, s, e, strand, classification = ln.split()
-#             # dic_noise[(chrom,int(s)-1,int(e),strand)] = classification
-#             dic_noise[(chrom, int(s), int(e), strand)] = classification
-#     return dic_noise
-
-
 def pick_sjc_label(df):
     '''Pick one label for each intron based on priroty'''
     sjc_priority = {'PR': 1, 'UP': 2, 'NE':3} # PR > UP > NE
@@ -1292,27 +1268,17 @@ def main(options, libl):
         fa = pyfastx.Fasta(options.genome)
         sys.stdout.write("done!\n")
 
-        if options.backward:
-            sys.stdout.write("Using backward splicing junction classifier...\n")
-            sjcb.ClassifySpliceJunction(
-                perind_file=perind_file,
-                gtf_annot=options.annot,
-                fa = fa,
-                rundir=options.rundir,
-                outprefix=options.outprefix,
-                verbose=options.verbose,
-            )
-        else:
-            sys.stdout.write("Using forward splicing junction classifier...\n")
-            sjcf.ClassifySpliceJunction(
-                perind_file=perind_file,
-                gtf_annot=options.annot,
-                fa = fa,
-                rundir=options.rundir,
-                outprefix=options.outprefix,
-                max_juncs=options.max_juncs,
-                verbose=options.verbose,
-            )
+        
+        sys.stdout.write("Classifying splice junctions...\n")
+        sjcf.ClassifySpliceJunction(
+            perind_file=perind_file,
+            gtf_annot=options.annot,
+            fa = fa,
+            rundir=options.rundir,
+            outprefix=options.outprefix,
+            max_juncs=options.max_juncs,
+            verbose=options.verbose,
+        )
         annotate_noisy(options)
 
     else:
@@ -1457,15 +1423,6 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="keep temporary files. (default false)",
-    )
-
-    parser.add_argument(
-        "-B",
-        "--Backward",
-        dest="backward",
-        action="store_true",
-        default=False,
-        help="Use backword splicing junction classifier. (default false)"
     )
 
     parser.add_argument(

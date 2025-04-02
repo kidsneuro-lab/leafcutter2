@@ -1,5 +1,5 @@
 #!/bin/env python3
-# SpliceJunctionClassified V0.1 (Updated Jan 2024)
+# SpliceJunctionClassified V0.2 (Updated Apr 2025)
 # Written by Yang Li Nov-2023
 # NOTE: 2024-08-30 This version takes in GTF file and perind_file from previous leafcutter2 steps. 
 # GTF coordinates are kept as 1-based like GTF. Perind count files are BED formatted, and converted into leafcutter 1 format immediately after having read in the ClassifierClassifySpliceJunction( function. (chrom, BEDstart, BEDend) to (chrom, BEDstart, BEDend +1). 
@@ -283,8 +283,8 @@ def many_junctions(failing_juncs, gene_name, transcripts_by_gene, strand, chrom,
                     possible_exons_after.append(exons_after)
                     break
         if len(possible_exons_before) != 0:
-            before[junc] = min(multimode(possible_exons_before))
-            after[junc] = min(multimode(possible_exons_after))
+            before[junc] = median(possible_exons_before)
+            after[junc] = median(possible_exons_after)
     return before, after
 
 
@@ -383,23 +383,6 @@ def long_exon_finder(failing_juncs, gene_name, transcripts_by_gene, strand, chro
 
                     allprot = allprot+prot
                 
-                #store a long_exon tag, only add this junction to list if it goes on to cause no PTCs that are not in long exons
-            #     if bool_ptc and i != len(s)-2:
-            #         ptc_coord = (min(ptc_pos) + 1)*3
-            #         #55nt rule
-            #         if i == len(s)-4 and ptc_prot_len*3-ptc_coord < 55:
-            #             break
-            #         elif exlen + 1 > 407:
-            #             bool_long_exon = True
-            #             break
-            #         else:
-            #             break
-            # if bool_long_exon:
-            #     long_exons.append(junc)
-            #     ptc_distances.append(ptc_prot_len*3 - ptc_coord)
-            #     ptc_exon_lens.append(ptc_prot_len*3)
-            #     break
-            # else:
                 if bool_ptc and i != len(s)-2 and not (i == len(s)-4 and ptc_prot_len*3 - ptc_coord < 55):
             
                     possible_distances.append(ptc_prot_len*3 - ptc_coord)
@@ -407,8 +390,8 @@ def long_exon_finder(failing_juncs, gene_name, transcripts_by_gene, strand, chro
                     break
 
         if len(possible_distances) != 0:
-            ptc_distances.append(min(multimode(possible_distances)))
-            ptc_exon_lens.append(min(multimode(possible_lens)))
+            ptc_distances.append(median(multimode(possible_distances)))
+            ptc_exon_lens.append(median(multimode(possible_lens)))
             ptc_junctions.append(junc)
     return ptc_junctions, ptc_distances, ptc_exon_lens
 
@@ -465,7 +448,6 @@ def solve_NMD(chrom, strand, junc, start_codons, stop_codons,gene_name, fa,
     junc_pass = {}
     junc_fail = {}
     path_pass = []
-    proteins = []
     
     dic_terminus = {}
 
@@ -478,7 +460,6 @@ def solve_NMD(chrom, strand, junc, start_codons, stop_codons,gene_name, fa,
         depth += 1
         if verbose:
             sys.stdout.write("Depth %s, Seed L = %s\n"%(depth, len(seed)))
-        #print(start_codons, [s[-1] for s in seed][-10:], len(junc))
                     
         for s in seed:
             # first check that the seed paths are good        
@@ -602,8 +583,6 @@ def solve_NMD(chrom, strand, junc, start_codons, stop_codons,gene_name, fa,
         
             if not bool_ptc:
                 # all pass
-                proteins.append("\t".join([gene_name,chrom,strand, "-".join([str(x) for x in s]), str(allprot)])+'\n')
-                #print("ALL PASS %s"%(s))
                 path_pass.append(tuple(s))
                 for i in range(1, len(s), 2):
                     j_coord = s[i:i+2]
@@ -649,7 +628,7 @@ def solve_NMD(chrom, strand, junc, start_codons, stop_codons,gene_name, fa,
         if len(new_paths) == 0:
             break
             
-    return junc_pass,junc_fail,proteins
+    return junc_pass,junc_fail
 
 def parse_gtf(gtf: str):
     '''Lower level function to parse GTF file
@@ -983,7 +962,7 @@ def ClassifySpliceJunction(
         
         if len(junctions) <= max_juncs:
             try:
-                junc_pass, junc_fail, proteins = solve_NMD(chrom,strand,junctions, 
+                junc_pass, junc_fail = solve_NMD(chrom,strand,junctions, 
                                                 start_codons, stop_codons, 
                                                 gene_name, fa)
                 junc_fail = set(junc_fail.keys())
@@ -1039,6 +1018,8 @@ def ClassifySpliceJunction(
             coding_5_prime = [j[0] for j in coding]
         else:
             coding_5_prime = [j[1] for j in coding]
+
+        utr_js = []
         for i in range(len(extra_utr_rule['annotated'])):
             j = extra_utr_rule['junction'][i]
             utr = extra_utr_rule['utr'][i]
@@ -1053,21 +1034,27 @@ def ClassifySpliceJunction(
             gencode = extra_utr_rule['gencode'][i]
             fout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',strand,
                                     str(annotated), str(bool_pass), str(utr), str(gencode)])+'\n')
+            if utr:
+                utr_js.append(j)
         
         for w in range(len(ptc_junctions)):
             j = ptc_junctions[w]
-            if j not in g_info[gene_name]['pcjunctions']:
-                lout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
-                                    str(ptc_distances[w]), str(ptc_exon_lens[w])])+'\n')
+            if j not in utr_js:
+                if j not in g_info[gene_name]['pcjunctions']:
+                    lout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
+                                        str(ptc_distances[w]), str(ptc_exon_lens[w])])+'\n')
         for j in exons_before:
-            if j not in g_info[gene_name]['pcjunctions']:
-                eout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
-                                    str(exons_before[j]), str(exons_after[j])])+'\n')
+            if j not in utr_js:
+                if j not in g_info[gene_name]['pcjunctions']:
+                    eout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
+                                        str(exons_before[j]), str(exons_after[j])])+'\n')
+
         for w in range(len(junc_pass['nuc_rule'])):
             j = junc_pass['nuc_rule'][w]
-            if j not in g_info[gene_name]['pcjunctions']:
-                nout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
-                                    str(ejc_distances[w])])+'\n') 
+            if j not in utr_js:
+                if j not in g_info[gene_name]['pcjunctions']:
+                    nout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
+                                        str(ejc_distances[w])])+'\n') 
 
 
 
