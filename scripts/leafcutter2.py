@@ -128,7 +128,7 @@ def pool_junc_reads(flist, options):
     maxIntronLen = int(options.maxintronlen)
     checkchrom = options.checkchrom
     print(f"Max Intron Length: {maxIntronLen}")
-    outFile = f"{rundir}/{outPrefix}_pooled"
+    outFile = f"{rundir}/clustering/{outPrefix}_pooled"
 
     if not os.path.exists(rundir):
         os.mkdir(rundir)
@@ -405,8 +405,8 @@ def refine_clusters(options):
     minclureads = int(options.minclureads)
     minreads = int(options.minreads)
 
-    inFile = f"{rundir}/{outPrefix}_pooled"
-    outFile = f"{rundir}/{outPrefix}_refined"
+    inFile = f"{rundir}/clustering/{outPrefix}_pooled"
+    outFile = f"{rundir}/clustering/{outPrefix}_refined"
     fout = open(outFile, "w")
 
     sys.stderr.write(f"\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Refine clusters from {inFile}...\n")
@@ -469,7 +469,7 @@ def addlowusage(options):
         written files:
             - [out_prefix]_lowusage_introns : file stores low usage introns (by cluster).
               Output file is version sorted.
-            - [out_prefix]_refined_noisy    : file stores all usage introns (by cluster),
+            - [out_prefix]_clusters    : file stores all usage introns (by cluster),
               although each cluster must pass min cluster reads cutoff. Output file is
               version sorted.
 
@@ -481,20 +481,20 @@ def addlowusage(options):
 
     outPrefix = options.outprefix
     rundir = options.rundir
-    pooled = f"{rundir}/{outPrefix}_pooled"
+    pooled = f"{rundir}/clustering/{outPrefix}_pooled"
     minclureads = int(options.minclureads)
     minreads = int(options.minreads)
 
     if options.cluster == None:
-        refined_cluster = f"{rundir}/{outPrefix}_refined"
+        refined_cluster = f"{rundir}/clustering/{outPrefix}_refined"
     else:
         refined_cluster = options.cluster
 
     outFile = (
-        f"{rundir}/{outPrefix}_refined_noisy"  # out file that includes noisy introns
+        f"{rundir}/clustering/{outPrefix}_clusters"  # out file that includes noisy introns
     )
     outFile_lowusageintrons = (
-        f"{rundir}/{outPrefix}_lowusage_introns"  # out file for lowusage introns
+        f"{rundir}/clustering/{outPrefix}_lowusage_introns"  # out file for lowusage introns
     )
 
     fout = open(outFile, "w")
@@ -635,7 +635,7 @@ def sort_junctions(libl, options):
 
     if options.cluster == None:  # if not providing refined clusters externally
         refined_cluster = (
-            f"{rundir}/{outPrefix}_refined_noisy"  # note refined noisy intron clusters
+            f"{rundir}/clustering/{outPrefix}_clusters"  # note refined noisy intron clusters
         )
         sys.stderr.write(f"\nUsing {refined_cluster} as refined cluster...\n")
     else:
@@ -648,7 +648,7 @@ def sort_junctions(libl, options):
     exons, cluExons = {}, {}
     cluN = 0  # clusterID
 
-    # fill in exons, cluExons dict from `*refined_noisy` intron cluster file
+    # fill in exons, cluExons dict from `*clusters` intron cluster file
     for ln in open(
         refined_cluster
     ):  # e.g. ln = "chr10:+ 135203:179993:5 135302:179993:29"
@@ -771,7 +771,7 @@ def sort_junctions(libl, options):
                 else:
                     by_chrom[chrom][intron] = int(counts)
 
-        # ------- Take clusters from refined_noisy, assign reads -------
+        # ------- Take clusters from clusters, assign reads -------
         # reads are from by_chrom (junc files)
         # For each intron cluster, write fraction for each intron (one intron per line).
         for clu in cluExons:  # cluExons: { k=cluID : v=[(chrom, start, end)...]}
@@ -780,7 +780,7 @@ def sort_junctions(libl, options):
             ks.sort()  # no need to version sort within cluster
 
             # Step 1: sum cluster level reads from each intron
-            # gather (sum) reads for each cluster in refined_noisy, read counts are from junc file (by_chrom)
+            # gather (sum) reads for each cluster in clusters, read counts are from junc file (by_chrom)
             tot = 0  # sum of total read counts per cluster
             usages = []
             for exon in ks:
@@ -1154,7 +1154,7 @@ def annotate_noisy(options):
     rundir = options.rundir
     minreadstd = float(options.minreadstd)
     fnameout = f"{rundir}/{outPrefix}"
-    sjc_f = f"{rundir}/{outPrefix}_junction_classifications.txt"  # Classified junction annotations
+    sjc_f = f"{rundir}/clustering/{outPrefix}_junction_classifications.txt"  # Classified junction annotations
 
     sys.stderr.write(
         f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Annotating introns with custom-classified annotations: {sjc_f} ...\n"
@@ -1177,10 +1177,10 @@ def annotate_noisy(options):
         fname = fnameout + "_perind.constcounts.gz"
 
     noisydiag = fname.replace(
-        ".gz", ".noise_by_intron.gz"
-    )  # eg: run/out_perind.counts.noise_by_intron.gz
-    numersdiag = fname.replace(".gz", ".noise_by_intron.gz").replace(
-        "perind", "perind_numers"
+        "_perind.counts", ".cluster_ratios"
+    )  # eg: run/out_perind.counts.classified.gz
+    numersdiag = fname.replace(
+        "_perind.counts", ".junction_counts"
     )  # eg: run/out_perind_numers.counts.noise.gz
 
     foutdiag = gzip.open(noisydiag, "wt")
@@ -1247,6 +1247,10 @@ def annotate_noisy(options):
 
 
 def main(options, libl):
+    
+    if not os.path.exists(options.rundir):
+        os.mkdir(options.rundir)
+    os.makedirs(f"{options.rundir}/clustering/", exist_ok=True)
 
     if options.cluster == None:
         pool_junc_reads(libl, options)
@@ -1277,6 +1281,7 @@ def main(options, libl):
             rundir=options.rundir,
             outprefix=options.outprefix,
             max_juncs=options.max_juncs,
+            keepannot=options.keepannot,
             verbose=options.verbose,
         )
         annotate_noisy(options)
@@ -1424,6 +1429,24 @@ if __name__ == "__main__":
         default=False,
         help="keep temporary files. (default false)",
     )
+    
+    parser.add_argument(
+        "-L",
+        "--keepleafcutter1",
+        dest="keepleafcutter1",
+        action="store_true",
+        default=False,
+        help="keep temporary LeafCutter1 files. (default false)",
+    )
+    
+    parser.add_argument(
+        "-P",
+        "--keepannot",
+        dest="keepannot",
+        action="store_true",
+        default=False,
+        help="save parsed annotations to .pckle files. (default false)",
+    )
 
     parser.add_argument(
         "-N",
@@ -1466,5 +1489,27 @@ if __name__ == "__main__":
             for tmp in [ln.strip() for ln in f.readlines()]:
                 os.remove(tmp)
         os.remove(os.path.join(options.rundir, options.outprefix) + "_sortedlibs")
+        if options.cluster == None:
+            os.remove(f"{options.rundir}/clustering/{options.outprefix}_pooled")
+            os.remove(f"{options.rundir}/clustering/{options.outprefix}_refined")
         sys.stderr.write(f"\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Done.\n")
+        
+    if (options.annot == None) or (options.genome == None):
+        shutil.move(os.path.join(options.rundir, options.outprefix) + "_perind.counts.gz", 
+                    os.path.join(options.rundir, options.outprefix) + ".cluster_ratios.unclassified.gz")
+        shutil.move(os.path.join(options.rundir, options.outprefix) + "_perind_numers.counts.gz", 
+                    os.path.join(options.rundir, options.outprefix) + ".junction_counts.unclassified.gz")
+    else:
+        
+        if not options.keepleafcutter1:
+            sys.stderr.write("Remove generated LeafCutter1 files... \n")
+            os.remove(os.path.join(options.rundir, options.outprefix) + "_perind.counts.gz")
+            os.remove(os.path.join(options.rundir, options.outprefix) + "_perind_numers.counts.gz")
+            sys.stderr.write(f"\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Done.\n")
+        else:
+            os.makedirs(os.path.join(options.rundir, "leafcutter1_files"), exist_ok=True)
+            shutil.move(os.path.join(options.rundir, options.outprefix) + "_perind.counts.gz", 
+                        os.path.join(options.rundir, "leafcutter1_files", options.outprefix) + "_perind.counts.gz")
+            shutil.move(os.path.join(options.rundir, options.outprefix) + "_perind_numers.counts.gz", 
+                        os.path.join(options.rundir, "leafcutter1_files", options.outprefix) + "_perind_numers.counts.gz")
 

@@ -163,10 +163,10 @@ def pool_junc_reads(flist, options):
     maxIntronLen = int(options.maxintronlen)
     checkchrom = options.checkchrom
     print(f"Max Intron Length: {maxIntronLen}")
-    outFile = f"{rundir}/{outPrefix}_pooled"
+    outFile = f"{rundir}/clustering/{outPrefix}_pooled"
     
-    if not os.path.exists(rundir):
-        os.mkdir(rundir)
+    if not os.path.exists(f"{rundir}/clustering/"):
+        os.makedirs(f"{rundir}/clustering/")
 
     # store introns in `by_chrom`, a nested dictionary 
     by_chrom = {} # { k=(chrom, strand) : v={ k=(start, end) : v=reads } }
@@ -416,8 +416,8 @@ def refine_clusters(options):
     minclureads = int(options.minclureads)
     minreads = int(options.minreads)
 
-    inFile = f"{rundir}/{outPrefix}_pooled"
-    outFile = f"{rundir}/{outPrefix}_refined"
+    inFile = f"{rundir}/clustering/{outPrefix}_pooled"
+    outFile = f"{rundir}/clustering/{outPrefix}_refined"
     fout = open(outFile,'w')
 
     sys.stderr.write(f"\nRefine clusters from {inFile}...\n")
@@ -485,7 +485,7 @@ def addlowusage(options):
         written files:
             - [out_prefix]_lowusage_introns : file stores low usage introns (by cluster).
               Output file is version sorted.
-            - [out_prefix]_refined_noisy    : file stores all usage introns (by cluster),
+            - [out_prefix]_clusters    : file stores all usage introns (by cluster),
               although each cluster must pass min cluster reads cutoff. Output file is
               version sorted.
               
@@ -497,14 +497,14 @@ def addlowusage(options):
 
     outPrefix = options.outprefix
     rundir = options.rundir
-    pooled = f"{rundir}/{outPrefix}_pooled"
+    pooled = f"{rundir}/clustering/{outPrefix}_pooled"
     minclureads = int(options.minclureads)
     minreads = int(options.minreads)
 
-    refined_cluster = f"{rundir}/{outPrefix}_refined"
+    refined_cluster = f"{rundir}/clustering/{outPrefix}_refined"
 
-    outFile = f"{rundir}/{outPrefix}_refined_noisy" # out file that includes noisy introns
-    outFile_lowusageintrons = f"{rundir}/{outPrefix}_lowusage_introns" # out file for lowusage introns
+    outFile = f"{rundir}/clustering/{outPrefix}_clusters" # out file that includes noisy introns
+    outFile_lowusageintrons = f"{rundir}/clustering/{outPrefix}_lowusage_introns" # out file for lowusage introns
 
     fout = open(outFile,'w')
     fout_lowusage = open(outFile_lowusageintrons,'w')

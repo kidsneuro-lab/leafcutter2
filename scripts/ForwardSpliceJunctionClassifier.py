@@ -811,6 +811,7 @@ def ClassifySpliceJunction(
     rundir: str = ".",
     outprefix: str = "Leaf2",
     max_juncs: int = 10000,
+    keepannot: bool = False,
     verbose: bool = False):
     """
     perind_file: str : LeafCutter perind counts file, e.g. leafcutter_perind.counts.gz
@@ -881,8 +882,9 @@ def ClassifySpliceJunction(
             for g in to_remove_ginfo:
                 g_info.pop(g)
         sys.stdout.write("Saving parsed annotations...\n")
-        with open(parsed_gtf, 'wb') as f:
-            pickle.dump((g_coords, g_info), f)
+        if keepannot:
+            with open(parsed_gtf, 'wb') as f:
+                pickle.dump((g_coords, g_info), f)
 
 
     txn2gene = f"{rundir}/txn2gene.{gtf_annot.split('/')[-1].split('.gtf')[0]}_SJC_annotations.pckle"
@@ -893,8 +895,9 @@ def ClassifySpliceJunction(
     except:
         sys.stdout.write("Failed... Making txn2gene annotations...\n")
         transcripts_by_gene = tx_by_gene(gtf_annot)
-        with open(txn2gene, 'wb') as f:
-            pickle.dump(transcripts_by_gene, f)
+        if keepannot:
+            with open(txn2gene, 'wb') as f:
+                pickle.dump(transcripts_by_gene, f)
     #transcripts_by_gene = tx_by_gene(gtf_annot)
     sys.stdout.write(" done!\n")
 
@@ -907,8 +910,9 @@ def ClassifySpliceJunction(
     except:
         sys.stdout.write("Failed... Making txn2gene annotations...\n")
         nmd_tx_by_gene = NMD_tx(gtf_annot)
-        with open(nmd_tx2gene, 'wb') as f:
-            pickle.dump(nmd_tx_by_gene, f)
+        if keepannot:
+            with open(nmd_tx2gene, 'wb') as f:
+                pickle.dump(nmd_tx_by_gene, f)
     #transcripts_by_gene = tx_by_gene(gtf_annot)
     sys.stdout.write(" done!\n")
 
@@ -931,13 +935,13 @@ def ClassifySpliceJunction(
                 gene_juncs[info] = []
             gene_juncs[info].append(junc[0])
 
-    fout = open(f"{rundir}/{outprefix}_junction_classifications.txt",'w')
+    fout = open(f"{rundir}/clustering/{outprefix}_junction_classifications.txt",'w')
     fout.write("\t".join(["Gene_name","Intron_coord","Strand","Annot","Coding","UTR","GencodePC"])+'\n')
-    lout = open(f"{rundir}/{outprefix}_long_exon_distances.txt",'w')
+    lout = open(f"{rundir}/clustering/{outprefix}_long_exon_distances.txt",'w')
     lout.write("\t".join(["Gene_name","Intron_coord","PTC_position","Exon_length"])+'\n')
-    eout = open(f"{rundir}/{outprefix}_exon_stats.txt",'w')
+    eout = open(f"{rundir}/clustering/{outprefix}_exon_stats.txt",'w')
     eout.write("\t".join(["Gene_name","Intron_coord","Exons_before","Exons_after"])+'\n')
-    nout = open(f"{rundir}/{outprefix}_nuc_rule_distances.txt",'w')
+    nout = open(f"{rundir}/clustering/{outprefix}_nuc_rule_distances.txt",'w')
     nout.write("\t".join(["Gene_name","Intron_coord","ejc_distance"])+'\n')
 
     for gene_name, chrom, strand in gene_juncs:

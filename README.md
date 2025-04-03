@@ -4,20 +4,6 @@
 
 This script takes junction files (e.g., produced by regtools) as input and constructs intron clusters from them. Then, it processes the intron clusters to identify rarely spliced introns based on certain filtering cut-offs. The output is a text file that follows the same format as the standard leafcutter tool. The first column of each row shows the genome coordinates of introns and labels them as **UP** (unproductive), **PR** (productive/protein-coding), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
 
-
-Main input files:
-    - junction files (e.g., processed using `regtools extract junctions`). 
-
-Main output files:
-
-- `{out_prefix}_perind.counts.noise.gz`: output functional introns (intact), and  noisy introns. Note the start and end coordinates of noisy introns are merged to the min(starts) and max(ends) of all functional introns within cluster.
-
-- `{out_prefix}_perind_numers.counts.noise.gz`: same as above, except write numerators.
-
-- `{out_prefix}_perind.counts.noise_by_intron.gz`: same as the first output, except here noisy introns' coordinates are kept as their original coordinates. This is useful for diagnosis purposes. 
-
-**Note:** splice junction files can be obtained from BAM files using `regtools`. E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . See detailed regtools documentations [here](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/).
-
 #### Prerequisites
 
 - Minimum python version - `python v3.6`
@@ -38,14 +24,22 @@ python scripts/leafcutter2.py \
 
 This mode first generate intron clusters based on the junction files. Then it counts junction reads towards each classified
 introns.
--    `junction_files.txt` should be a text file listing path to each junction file, one path per line.
--    `-r` specify the directory of output. 
--    `-o` specify the prefix of output file names (not including directory name).
--    `-A` a GTF annotation with genes, start codons and stop codons.
--    `-G` a genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
+-    `-j junction_files.txt` should be a text file listing path to each junction file, one path per line.
+-    `-r output_dir` specify the directory of output. 
+-    `-o leafcutter2` specify the prefix of output file names (not including directory name).
+-    `-A gtf_file.gtf` a GTF annotation with genes, start codons and stop codons.
+-    `-G genome.fa` a genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
+
+**Note:** 
+- Splice junction files should be BED formatted (0 based left close, right open).
+- Splice junction files can be obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/). E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . They can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files. See each tool's documentation for details.
+- LeafCutter2 will still run if you skip the `-A` and `-G` parameters, but it will not classify the splice junctions.
 
 
-**Note:** LeafCutter2 will still run if you skip the `-A` and `-G` parameters, but it will not classify the splice junctions.
+Main output files:
+- `{out_prefix}_perind.counts.noise.gz`: output functional introns (intact), and  noisy introns. Note the start and end coordinates of noisy introns are merged to the min(starts) and max(ends) of all functional introns within cluster.
+- `{out_prefix}_perind_numers.counts.noise.gz`: same as above, except write numerators.
+- `{out_prefix}_perind.counts.noise_by_intron.gz`: same as the first output, except here noisy introns' coordinates are kept as their original coordinates. This is useful for diagnosis purposes. 
 
 
 #### Parameters
