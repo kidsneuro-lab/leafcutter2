@@ -1077,7 +1077,7 @@ def merge_discordant_logics(sjc_file: str):
                               ]].astype(int).astype(str).agg(''.join, axis=1).map(classifier)
 
         # if multiple classifications, take the one with highest priority
-        sjc = sjc.groupby(['Intron_coord', 'Strand']).apply(pick_sjc_label).reset_index(drop=True)
+        sjc = sjc.groupby(['Intron_coord', 'Strand'])[['Intron_coord', 'Strand', 'SJClass', 'Gene_name']].apply(pick_sjc_label).reset_index(drop=True)
         sjc = sjc[['Intron_coord', 'Strand', 'SJClass', 'Gene_name']]
 
         # convert df to dict
@@ -1090,7 +1090,7 @@ def merge_discordant_logics(sjc_file: str):
                               ]].astype(int).astype(str).agg(''.join, axis=1).map(classifer_3bits)
         
         # if multiple classifications, take the one with highest priority
-        sjc = sjc.groupby(['Intron_coord', 'Strand']).apply(pick_sjc_label).reset_index(drop=True)
+        sjc = sjc.groupby(['Intron_coord', 'Strand'])[['Intron_coord', 'Strand', 'SJClass', 'Gene_name']].apply(pick_sjc_label).reset_index(drop=True)
         sjc = sjc[['Intron_coord', 'Strand', 'SJClass', 'Gene_name']]
 
         # convert df to dict
