@@ -1306,8 +1306,8 @@ if __name__ == "__main__":
         "-o",
         "--outprefix",
         dest="outprefix",
-        default="leafcutter",
-        help="output prefix (default leafcutter)",
+        default="leafcutter2",
+        help="output prefix (default leafcutter2)",
     )
 
     parser.add_argument(
