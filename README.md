@@ -15,6 +15,12 @@ LeafCutter2 is a tool for clustering, functional characterization and quantifica
 - GTF annotation with genes, start codons and stop codons.
 - Genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
 
+We recommend using the BED-formatted `.junc` files from obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/) as input. E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc`. 
+
+The BED files can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the script `scripts/add_on_scripts/STAR2Junc.py` to facilitate preprocessing. Usage: `python STAR2Junc.py sample.SJ.out.tab sample.bed.gz`. 
+
+#### Running LeafCutter2
+
 We provide a basic example from GTEx in the `example/` directory. Assuming that we're working in the `example/` directory, a basic LeafCutter2 run work works as follows:
 
 ```
@@ -30,27 +36,14 @@ python ../scripts/leafcutter2.py \
 -    `-r output_dir` specifies the directory of output (default is current directory, `./`). 
 -    `-A annotation/chr10.gtf.gz` is a gtf file of chromosome 10 obtained from Gencode v43
 -    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly)
+-    The data files in this example were obtained from [GTEx's open access data](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression). 
 
 #### Output:
-- `leafcutter2.cluster_ratios.gz`
-
-. The first column of each row shows the genome coordinates of introns and labels them as **UP** (unproductive), **PR** (productive/protein-coding), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
-
-**Note:** 
-
-We recommend using the `.junc` files from obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/). They can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the .
-
-
-- The splice junction BED files in this example were obtained [from GTEX's open access data](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression). 
-- Splice junction files should be BED formatted (0 based left close, right open).
-- Splice junction files can be obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/). E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . They can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the .
-- LeafCutter2 will still run if you skip the `-A` and `-G` parameters, but it will not classify the splice junctions.
-
-
-Main output files:
-- `{out_prefix}_perind.counts.noise.gz`: output functional introns (intact), and  noisy introns. Note the start and end coordinates of noisy introns are merged to the min(starts) and max(ends) of all functional introns within cluster.
-- `{out_prefix}_perind_numers.counts.noise.gz`: same as above, except write numerators.
-- `{out_prefix}_perind.counts.noise_by_intron.gz`: same as the first output, except here noisy introns' coordinates are kept as their original coordinates. This is useful for diagnosis purposes. 
+- `leafcutter2.cluster_ratios.gz` a table quantifying splice junction read counts for each intron, divided by the total number of reads observed for the intron cluster to which the intron belongs. Each row corresponds to a splice junction, with the first column indicating the splice junction ID and all subsequent columns corresponding to each sample. The splice junction ID has the following format: `chr10:134786:179993:clu_1_+:PR`, indicating the chromosome, start and end of the splice junction, the LeafCutter intron cluster to which it belongs (in this case, `clu_1_+`, and a label indicating the splice junction's function: **PR** (productive/protein-coding), **UP** (unproductive), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
+- `leafcutter2.junction_counts.gz` a table similar to `leafcutter2.cluster_ratios.gz`, except it only keeps track of the splice junction read counts for each intron. Useful for differential splicing analysis with [LeafCutter's R package](https://davidaknowles.github.io/leafcutter/).
+- `clustering/` a directory containing files relevant for clustering and annotation. 
+    - `clustering/leafcutter2_clusters` contains the intron clusters. Useful for skipping the clustering step in repeated runs.
+    - Other files documenting stats from the clustering and classification algorithm. Useful for debugging.
 
 
 #### Parameters
@@ -113,7 +106,7 @@ optional arguments:
                         Useful for debugging. (default false)
 ```
 
-## Pre-clustering splice junctions
+## Pre-clustering splice junctions (optional)
 
 Generating intron clusters first can save time form multiple subsequent runs. The script `scripts/leafcutter_make_clusters.py`
 makes intron clusters separately that can be later used as input for `scripts/leafcutter2.py`. You can generate clusters by running: 
@@ -122,18 +115,16 @@ makes intron clusters separately that can be later used as input for `scripts/le
 python scripts/leafcutter_make_clusters.py \
     -j junction_files.txt \
     -r output_dir \
-    -o leafcutter2 
 ```
-This will generate a file named `output_dir/leafcutter2_refined_noisy` that can be later used as an input for LeafCutter2. This will skip the clustering step:
+This will generate a file named `output_dir/clustering/leafcutter2_clusters` that can be later used as an input for LeafCutter2. This will skip the clustering step:
 
 ```
-python scripts/leafcutter2.py \
+python ../scripts/leafcutter2.py \
     -j junction_files.txt \
     -r output_dir \
-    -o leafcutter2 \
-    -A gtf_file.gtf \
-    -G genome.fa \
-    -c output_dir/leafcutter2_refined_noisy
+    -A annotation/chr10.gtf.gz \
+    -G annotation/chr10.fa.gz
+    -c output_dir/clustering/leafcutter2_clusters
 ```
 
 **Note:** The junction-filtering options (--MINCLUREADS, --MINREADS, --MINCLURATIO) will be ignored by `leafcutter2.py` if a pre-defined set of intron clusters is provided.
