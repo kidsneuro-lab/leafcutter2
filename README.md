@@ -10,7 +10,7 @@ LeafCutter2 is a tool for clustering, functional characterization and quantifica
 
 ## Clustering, classifying and quantifying splice junctions
 
-#### Input:
+### Input:
 - Splice junction BED files. They should contain at least six columns (chrom, start, end, name, score and strand), with the fifth column corresponding to the splice junction read counts. 
 - GTF annotation with genes, start codons and stop codons.
 - Genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
@@ -23,7 +23,7 @@ The BED files can also be obtained from [STAR's](https://github.com/alexdobin/ST
 
 Usage: `python STAR2Junc.py sample.SJ.out.tab sample.bed.gz`. 
 
-#### Running LeafCutter2
+### Running LeafCutter2
 
 We provide a basic example from GTEx in the `example/` directory. Assuming that we're in the `example/` directory, a basic LeafCutter2 run works as follows:
 
@@ -42,7 +42,7 @@ python ../scripts/leafcutter2.py \
 -    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly)
 -    The data files in this example were obtained from [GTEx's open access data](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression). 
 
-#### Output:
+### Output:
 - `leafcutter2.cluster_ratios.gz` a table quantifying splice junction read counts for each intron, divided by the total number of reads observed for the intron cluster to which the intron belongs. Each row corresponds to a splice junction, with the first column indicating the splice junction ID and all subsequent columns corresponding to each sample. The splice junction ID has the following format: `chr10:134786:179993:clu_1_+:PR`, indicating the chromosome, start and end of the splice junction, the LeafCutter intron cluster to which it belongs (in this case, `clu_1_+`, and a label indicating the splice junction's function: **PR** (productive/protein-coding), **UP** (unproductive), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
 - `leafcutter2.junction_counts.gz` a table similar to `leafcutter2.cluster_ratios.gz`, except it only keeps track of the splice junction read counts for each intron. Useful for differential splicing analysis with [LeafCutter's R package](https://davidaknowles.github.io/leafcutter/).
 - `clustering/` a directory containing files relevant for clustering and annotation. 
@@ -50,7 +50,7 @@ python ../scripts/leafcutter2.py \
     - Other files documenting stats from the clustering and classification algorithm. Useful for debugging.
 
 
-#### Parameters
+### Parameters
 
 ```
 python scripts/leafcutter2.py -h
