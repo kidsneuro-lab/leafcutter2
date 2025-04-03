@@ -15,9 +15,13 @@ LeafCutter2 is a tool for clustering, functional characterization and quantifica
 - GTF annotation with genes, start codons and stop codons.
 - Genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
 
-We recommend using the BED-formatted `.junc` files from obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/) as input. E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc`. 
+We recommend using the BED-formatted `.junc` files from obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/) as input. 
 
-The BED files can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the script `scripts/add_on_scripts/STAR2Junc.py` to facilitate preprocessing. Usage: `python STAR2Junc.py sample.SJ.out.tab sample.bed.gz`. 
+E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc`. 
+
+The BED files can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the script `scripts/add_on_scripts/STAR2Junc.py` to facilitate preprocessing. 
+
+Usage: `python STAR2Junc.py sample.SJ.out.tab sample.bed.gz`. 
 
 #### Running LeafCutter2
 
