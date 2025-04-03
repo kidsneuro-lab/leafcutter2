@@ -17,7 +17,6 @@ A basic LeafCutter2 run work works as follows:
 python scripts/leafcutter2.py \
     -j junction_files.txt \
     -r output_dir \
-    -o leafcutter2 \
     -A gtf_file.gtf \
     -G genome.fa
 ```
@@ -25,8 +24,7 @@ python scripts/leafcutter2.py \
 This mode first generate intron clusters based on the junction files. Then it counts junction reads towards each classified
 introns.
 -    `-j junction_files.txt` should be a text file listing path to each junction file, one path per line.
--    `-r output_dir` specify the directory of output. 
--    `-o leafcutter2` specify the prefix of output file names (not including directory name).
+-    `-r output_dir` specify the directory of output (default is current directory, `./`). 
 -    `-A gtf_file.gtf` a GTF annotation with genes, start codons and stop codons.
 -    `-G genome.fa` a genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
 
