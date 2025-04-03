@@ -39,7 +39,8 @@ python ../scripts/leafcutter2.py \
 -    `-j junction_files.txt` should be a text file listing path to each junction file, one path per line.
 -    `-r output_dir` specifies the directory of output (default is current directory, `./`). 
 -    `-A annotation/chr10.gtf.gz` is a gtf file of chromosome 10 obtained from Gencode v43
--    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly)
+-    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly).
+-    By default, LeafCutter2 expects a GTF file to have the format used by Gencode. GTF files from different souces can be adapted to work with LeafCutter2 using [our add-on script](https://github.com/cfbuenabadn/leafcutter2/blob/main/scripts/add_on_scripts/Reformat_gtf.README.md).
 -    The data files in this example were obtained from [GTEx's open access data](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression). 
 
 ### Output:
