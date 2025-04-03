@@ -6,8 +6,7 @@ This script takes junction files (e.g., produced by regtools) as input and const
 
 
 Main input files:
-    - junction files, e.g., processed using `regtools extract junctions`. 
-
+    - junction files (e.g., processed using `regtools extract junctions`). 
 
 Main output files:
 
@@ -16,6 +15,12 @@ Main output files:
 - `{out_prefix}_perind_numers.counts.noise.gz`: same as above, except write numerators.
 
 - `{out_prefix}_perind.counts.noise_by_intron.gz`: same as the first output, except here noisy introns' coordinates are kept as their original coordinates. This is useful for diagnosis purposes. 
+
+**Note:** splice junction files can be obtained from BAM files using `regtools`. E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . See detailed regtools documentations [here](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/).
+
+#### Prerequisites
+
+- Minimum python version - `python v3.6`
 
 
 ## Clustering, classifying and quantifying splice junctions
@@ -43,31 +48,7 @@ introns.
 **Note:** LeafCutter2 will still run if you skip the `-A` and `-G` parameters, but it will not classify the splice junctions.
 
 
-## Pre-clustering splice junctions
-
-Generating intron clusters first can save time form multiple subsequent runs. The script `scripts/leafcutter_make_clusters.py`
-makes intron clusters separately that can be later used as input for `scripts/leafcutter2.py`. You can generate clusters by running: 
-
-```
-python scripts/leafcutter_make_clusters.py \
-    -j junction_files.txt \
-    -r output_dir \
-    -o leafcutter2 
-```
-This will generate a file named `output_dir/leafcutter2_refined_noisy` that can be later used as an input for LeafCutter2. This will skip the clustering step:
-
-```
-python scripts/leafcutter2.py \
-    -j junction_files.txt \
-    -r output_dir \
-    -o leafcutter2 \
-    -A gtf_file.gtf \
-    -G genome.fa \
-    -c output_dir/leafcutter2_refined_noisy
-```
-
-
-### Parameters
+#### Parameters
 
 ```
 python scripts/leafcutter2.py -h
@@ -123,18 +104,28 @@ optional arguments:
   -T, --keeptemp        keep temporary files. (default false)
 ```
 
+## Pre-clustering splice junctions
 
-## Prerequisites
+Generating intron clusters first can save time form multiple subsequent runs. The script `scripts/leafcutter_make_clusters.py`
+makes intron clusters separately that can be later used as input for `scripts/leafcutter2.py`. You can generate clusters by running: 
 
-- Minimum python version - `python v3.6`
-- It is recommended to use `regtools` to junction files from BAM files. E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . See detailed regtools documentations [here](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/).
+```
+python scripts/leafcutter_make_clusters.py \
+    -j junction_files.txt \
+    -r output_dir \
+    -o leafcutter2 
+```
+This will generate a file named `output_dir/leafcutter2_refined_noisy` that can be later used as an input for LeafCutter2. This will skip the clustering step:
 
-## NOTE
+```
+python scripts/leafcutter2.py \
+    -j junction_files.txt \
+    -r output_dir \
+    -o leafcutter2 \
+    -A gtf_file.gtf \
+    -G genome.fa \
+    -c output_dir/leafcutter2_refined_noisy
+```
 
-- Make sure intron junction annotation files are BED formatted (0 based left close right open). This is different from the standard leafcutter.
-- leafcutter2 outputs BED formatted coordinates.
-- key differences from leafcutter:
-    - leafcutter2 use the same set of filters to construct intron clusters.
-    - However, when counting junction reads towards predefined or on-demand-run intron clusters, no read filter is applied, essentially all junction reads are counted towards introns.
-    - The filtering options (--MINCLUREADS, --MINREADS, --MINCLURATIO) are only used if you are not providing a pre-defined set of intron clusters. They are not used against counting junction reads towards introns.
+**Note:** The junction-filtering options (--MINCLUREADS, --MINREADS, --MINCLURATIO) will be ignored by `leafcutter2.py` if a pre-defined set of intron clusters is provided.
 
