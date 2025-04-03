@@ -61,7 +61,7 @@ optional arguments:
   -r RUNDIR, --rundir RUNDIR
                         write to directory (default ./)
   -o OUTPREFIX, --outprefix OUTPREFIX
-                        output prefix (default leafcutter)
+                        output prefix (default leafcutter2)
   -q, --quiet           don't print status messages to stdout
   -A ANNOTATION, --annot ANNOTATION
                         GTF annotation file
@@ -94,6 +94,10 @@ optional arguments:
   -f OFFSET, --offset OFFSET
                         Offset sometimes useful for off by 1 annotations. (default 0)
   -T, --keeptemp        keep temporary files. (default false)
+  -L, --keepleafcutter1 keep temporary LeafCutter1 files. Useful for running differential splicing 
+                        analysis with leafcutter's R package. (default false)
+  -P, --keepannot       keep pickle files with parsed GTF annotation of transcripts. 
+                        Useful for debugging. (default false)
 ```
 
 ## Pre-clustering splice junctions
