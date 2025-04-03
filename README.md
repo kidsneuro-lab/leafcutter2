@@ -2,35 +2,48 @@
 
 ## Introduction
 
-This script takes junction files (e.g., produced by regtools) as input and constructs intron clusters from them. Then, it processes the intron clusters to identify rarely spliced introns based on certain filtering cut-offs. The output is a text file that follows the same format as the standard leafcutter tool. The first column of each row shows the genome coordinates of introns and labels them as **UP** (unproductive), **PR** (productive/protein-coding), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
+LeafCutter2 is a tool for clustering, functional characterization and quantification of splice junction read counts. It implements a novel dynamic programming algorithm over the standard LeafCutter output to classify splice junctions and alternative splicing events according to their molecular function (i.e.: protein-coding or unproductive).
 
 #### Prerequisites
 
-- Minimum python version - `python v3.6`
-
+- The necessary python libraries can be installed with `leafcutter2_env.yml`.
 
 ## Clustering, classifying and quantifying splice junctions
 
-A basic LeafCutter2 run work works as follows:
+#### Input:
+- Splice junction BED files. They should contain at least six columns (chrom, start, end, name, score and strand), with the fifth column corresponding to the splice junction read counts. 
+- GTF annotation with genes, start codons and stop codons.
+- Genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
+
+We provide a basic example from GTEx in the `example/` directory. Assuming that we're working in the `example/` directory, a basic LeafCutter2 run work works as follows:
 
 ```
-python scripts/leafcutter2.py \
+python ../scripts/leafcutter2.py \
     -j junction_files.txt \
     -r output_dir \
-    -A gtf_file.gtf \
-    -G genome.fa
+    -A annotation/chr10.gtf.gz \
+    -G annotation/chr10.fa.gz
 ```
 
-This mode first generate intron clusters based on the junction files. Then it counts junction reads towards each classified
-introns.
+**Notes:** 
 -    `-j junction_files.txt` should be a text file listing path to each junction file, one path per line.
--    `-r output_dir` specify the directory of output (default is current directory, `./`). 
--    `-A gtf_file.gtf` a GTF annotation with genes, start codons and stop codons.
--    `-G genome.fa` a genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
+-    `-r output_dir` specifies the directory of output (default is current directory, `./`). 
+-    `-A annotation/chr10.gtf.gz` is a gtf file of chromosome 10 obtained from Gencode v43
+-    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly)
+
+#### Output:
+- `leafcutter2.cluster_ratios.gz`
+
+. The first column of each row shows the genome coordinates of introns and labels them as **UP** (unproductive), **PR** (productive/protein-coding), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
 
 **Note:** 
+
+We recommend using the `.junc` files from obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/). They can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the .
+
+
+- The splice junction BED files in this example were obtained [from GTEX's open access data](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression). 
 - Splice junction files should be BED formatted (0 based left close, right open).
-- Splice junction files can be obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/). E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . They can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files. See each tool's documentation for details.
+- Splice junction files can be obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/). E.g.: `regtools junctions extract -a 8 -i 50 -I 500000 bamfile.bam -o outfile.junc` . They can also be obtained from [STAR's](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) `SJ.out.tab` files with minimal modifications. We include the .
 - LeafCutter2 will still run if you skip the `-A` and `-G` parameters, but it will not classify the splice junctions.
 
 
