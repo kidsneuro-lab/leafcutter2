@@ -25,7 +25,7 @@ Usage: `python STAR2Junc.py sample.SJ.out.tab sample.bed.gz`.
 
 #### Running LeafCutter2
 
-We provide a basic example from GTEx in the `example/` directory. Assuming that we're working in the `example/` directory, a basic LeafCutter2 run work works as follows:
+We provide a basic example from GTEx in the `example/` directory. Assuming that we're in the `example/` directory, a basic LeafCutter2 run works as follows:
 
 ```
 python ../scripts/leafcutter2.py \
