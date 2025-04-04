@@ -1282,6 +1282,10 @@ def main(options, libl):
             outprefix=options.outprefix,
             max_juncs=options.max_juncs,
             keepannot=options.keepannot,
+            gene_type=options.gene_type,
+            transcript_type=options.transcript_type,
+            gene_name=options.gene_name,
+            transcript_name=options.transcript_name,
             verbose=options.verbose,
         )
         annotate_noisy(options)
@@ -1436,7 +1440,8 @@ if __name__ == "__main__":
         dest="keepleafcutter1",
         action="store_true",
         default=False,
-        help="keep temporary LeafCutter1 files. (default false)",
+        help="keep temporary LeafCutter1 files. Useful for running differential splicing \
+              analysis with leafcutter's R package. (default false)",
     )
     
     parser.add_argument(
@@ -1446,6 +1451,38 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="save parsed annotations to .pckle files. (default false)",
+    )
+    
+    parser.add_argument(
+        "-g",
+        "--gene_type",
+        dest="gene_type",
+        default="gene_type",
+        help="tag for gene type in GTF file (default gene_type)",
+    )
+    
+    parser.add_argument(
+        "-t",
+        "--transcript_type",
+        dest="transcript_type",
+        default="transcript_type",
+        help="tag for transcript type in GTF file (default transcript_type)",
+    )
+    
+    parser.add_argument(
+        "-gn",
+        "--gene_name",
+        dest="gene_name",
+        default="gene_name",
+        help="tag for gene name or ID in GTF file (default gene_name)",
+    )
+    
+    parser.add_argument(
+        "-tn",
+        "--transcript_name",
+        dest="transcript_name",
+        default="transcript_name",
+        help="tag for transcript name or ID in GTF file (default transcript_name)",
     )
 
     parser.add_argument(

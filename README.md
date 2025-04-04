@@ -35,13 +35,12 @@ python ../scripts/leafcutter2.py \
     -G annotation/chr10.fa.gz
 ```
 
-**Notes:** 
 -    `-j junction_files.txt` should be a text file listing path to each junction file, one path per line.
 -    `-r output_dir` specifies the directory of output (default is current directory, `./`). 
 -    `-A annotation/chr10.gtf.gz` is a gtf file of chromosome 10 obtained from Gencode v43
--    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly).
--    By default, LeafCutter2 expects a GTF file to have the format used by Gencode. GTF files from different souces can be adapted to work with LeafCutter2 using [our add-on script](https://github.com/cfbuenabadn/leafcutter2/blob/main/scripts/add_on_scripts/Reformat_gtf.README.md).
--    The data files in this example were obtained from [GTEx's open access data](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression). 
+-    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly). 
+
+**Note:** Make sure that the chromosome names match between the BED, GTF and FASTA files.
 
 ### Output:
 - `leafcutter2.cluster_ratios.gz` a table quantifying splice junction read counts for each intron, divided by the total number of reads observed for the intron cluster to which the intron belongs. Each row corresponds to a splice junction, with the first column indicating the splice junction ID and all subsequent columns corresponding to each sample. The splice junction ID has the following format: `chr10:134786:179993:clu_1_+:PR`, indicating the chromosome, start and end of the splice junction, the LeafCutter intron cluster to which it belongs (in this case, `clu_1_+`, and a label indicating the splice junction's function: **PR** (productive/protein-coding), **UP** (unproductive), **NE** (ambiguous in their functional effect) or **IN** (intergenic).
@@ -49,6 +48,25 @@ python ../scripts/leafcutter2.py \
 - `clustering/` a directory containing files relevant for clustering and annotation. 
     - `clustering/leafcutter2_clusters` contains the intron clusters. Useful for skipping the clustering step in repeated runs.
     - Other files documenting stats from the clustering and classification algorithm. Useful for debugging.
+    
+### A note on GTF files:
+
+For classification, LeafCutter2 requires information from a GTF file. Please ensure that the features column (third column on a GTF) includes the following type of information, and that the names match:
+- `gene`
+- `transcript`
+- `CDS'
+- `start_codon`
+- `stop_codon`
+
+In addition, LeafCutter2 requires information on gene and transcript types. These come in the 9th column of a GTF file, but different annotations can use different tags (e.g., Gencode typically uses `gene_type`, while Ensembl uses `gene_biotype`). You can specify what tag your GTF uses by using the following parameters:
+- `--gene_type` (default: `gene_type`)
+- `--transcript_type` (default: `transcript_type`)
+
+You can also specify what tag your GTF uses for gene and transcript name (or if you prefer, change from names to gene and transcript IDs) by using:
+- `--gene_name` (default: `gene_name`)
+- `--transcript_name` (default: `transcript_name`)
+
+Finally, some GTFs might lack some or all of these features and information. E.g, if you're working with an assembled GTF with StringTie, or some GTFs downloaded from the UCSC Genome Browser. In this case, you can reformat your GTF file using our add on script [Reformat_gtf.py](https://github.com/cfbuenabadn/leafcutter2/blob/main/scripts/add_on_scripts/Reformat_gtf.py). See instructions [here](https://github.com/cfbuenabadn/leafcutter2/blob/main/scripts/add_on_scripts/Reformat_gtf.README.md). 
 
 
 ### Parameters
@@ -107,8 +125,15 @@ optional arguments:
   -T, --keeptemp        keep temporary files. (default false)
   -L, --keepleafcutter1 keep temporary LeafCutter1 files. Useful for running differential splicing 
                         analysis with leafcutter's R package. (default false)
-  -P, --keepannot       keep pickle files with parsed GTF annotation of transcripts. 
-                        Useful for debugging. (default false)
+  -P, --keepannot       save parsed annotations to .pckle files. (default false)
+  -g, --gene_type GENE_TYPE
+                        tag for gene type in GTF file (default gene_type)
+  -t, --transcript_type GENE_TYPE
+                        tag for transcript type in GTF file (default transcript_type)
+  -gn, --gene_type GENE_TYPE
+                        tag for gene name or ID in GTF file (default gene_name)
+  -tn, --transcript_type GENE_TYPE
+                        tag for transcript name or ID in GTF file (default transcript_name)
 ```
 
 ## Pre-clustering splice junctions (optional)

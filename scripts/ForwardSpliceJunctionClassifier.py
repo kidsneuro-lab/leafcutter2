@@ -17,9 +17,14 @@ import pyfastx
 from Bio.Seq import Seq
 
 
-def tx_by_gene(gtf_annot):
+def tx_by_gene(gtf_annot, 
+               gene_type: str, 
+               transcript_type: str,
+               gene_name: str, 
+               transcript_name: str
+              ):
     transcripts_by_gene = {}
-    for dic in parse_gtf(gtf_annot):
+    for dic in parse_gtf(gtf_annot, gene_type, transcript_type, gene_name, transcript_name):
         if dic['type'] == 'transcript':
             if dic['gene_name'] not in transcripts_by_gene:
                 transcripts_by_gene[dic['gene_name']] = {dic['transcript_name']: []}
@@ -30,9 +35,14 @@ def tx_by_gene(gtf_annot):
             insort(transcripts_by_gene[dic['gene_name']][dic['transcript_name']], int((dic['end'])))
     return transcripts_by_gene
 
-def NMD_tx(gtf_annot):
+def NMD_tx(gtf_annot, 
+           gene_type: str, 
+           transcript_type: str,
+           gene_name: str, 
+           transcript_name: str
+          ):
     nmd_tx_by_gene = {}
-    for dic in parse_gtf(gtf_annot):
+    for dic in parse_gtf(gtf_annot, gene_type, transcript_type, gene_name, transcript_name):
         if dic['transcript_type'] != 'nonsense_mediated_decay':
             continue
         if dic['type'] == 'transcript':
@@ -656,7 +666,12 @@ def solve_NMD(chrom, strand, junc, start_codons, stop_codons,gene_name, fa,
             
     return junc_pass,junc_fail
 
-def parse_gtf(gtf: str):
+def parse_gtf(gtf: str, 
+              gene_type: str, 
+              transcript_type: str,
+              gene_name: str, 
+              transcript_name: str
+             ):
     '''Lower level function to parse GTF file
     - gtf: str : path to GTF annotation file
     - returns: dictionary with keys: 
@@ -670,7 +685,18 @@ def parse_gtf(gtf: str):
         if ln[0] == "#": continue
         ln = ln.strip().split('\t')
         for i in range(len(fields)):
-            dic[fields[i]] = ln[i]
+            if fields[i] == 'info':
+                dic[fields[i]] = ln[i].replace(
+                    gene_type, 'gene_type'
+                ).replace(
+                    transcript_type, 'transcript_type'
+                ).replace(
+                    gene_name, 'gene_name'
+                ).replace(
+                    transcript_name, 'transcript_name'
+                )
+            else:
+                dic[fields[i]] = ln[i]
 
         # add 4 additional fields, parsed from info field
         for ks in ['gene_name', "transcript_type","transcript_name", "gene_type"]:
@@ -684,7 +710,11 @@ def parse_gtf(gtf: str):
         yield dic
          
 
-def parse_annotation(gtf_annot: str):
+def parse_annotation(gtf_annot: str,
+                     gene_type: str, 
+                     transcript_type: str,
+                     gene_name: str, 
+                     transcript_name: str):
     '''
     Used `parse_gtf` to first parse a gtf file, then extract and return further
     information, including gene coordinates, intron info, and splice site to 
@@ -702,7 +732,7 @@ def parse_annotation(gtf_annot: str):
     genes_coords = {}
     ss2gene = {}
 
-    for dic in parse_gtf(gtf_annot):
+    for dic in parse_gtf(gtf_annot, gene_type, transcript_type, gene_name, transcript_name):
         chrom = dic['chrom']
         gname = dic['gene_name']
         tname = dic['transcript_name'], gname
@@ -838,6 +868,10 @@ def ClassifySpliceJunction(
     outprefix: str = "Leaf2",
     max_juncs: int = 10000,
     keepannot: bool = False,
+    gene_type: str = "gene_type",
+    transcript_type: str = "transcript_type",
+    gene_name: str = "gene_name",
+    transcript_name: str = "transcript_name",
     verbose: bool = False):
     """
     perind_file: str : LeafCutter perind counts file, e.g. leafcutter_perind.counts.gz
@@ -891,7 +925,7 @@ def ClassifySpliceJunction(
         sys.stdout.write(" done!\n")
     except:
         sys.stdout.write("Parsing annotations for the first time...\n")
-        g_coords, g_info, ss2gene = parse_annotation(gtf_annot)
+        g_coords, g_info, ss2gene = parse_annotation(gtf_annot, gene_type, transcript_type, gene_name, transcript_name)
         
     
         for chrom,strand in g_coords:
@@ -920,11 +954,10 @@ def ClassifySpliceJunction(
             transcripts_by_gene = pickle.load(f)
     except:
         sys.stdout.write("Failed... Making txn2gene annotations...\n")
-        transcripts_by_gene = tx_by_gene(gtf_annot)
+        transcripts_by_gene = tx_by_gene(gtf_annot, gene_type, transcript_type, gene_name, transcript_name)
         if keepannot:
             with open(txn2gene, 'wb') as f:
                 pickle.dump(transcripts_by_gene, f)
-    #transcripts_by_gene = tx_by_gene(gtf_annot)
     sys.stdout.write(" done!\n")
 
 
@@ -935,11 +968,10 @@ def ClassifySpliceJunction(
             nmd_tx_by_gene = pickle.load(f)
     except:
         sys.stdout.write("Failed... Making txn2gene annotations...\n")
-        nmd_tx_by_gene = NMD_tx(gtf_annot)
+        nmd_tx_by_gene = NMD_tx(gtf_annot, gene_type, transcript_type, gene_name, transcript_name)
         if keepannot:
             with open(nmd_tx2gene, 'wb') as f:
                 pickle.dump(nmd_tx_by_gene, f)
-    #transcripts_by_gene = tx_by_gene(gtf_annot)
     sys.stdout.write(" done!\n")
 
 
@@ -1086,65 +1118,3 @@ def ClassifySpliceJunction(
                     nout.write('\t'.join([gene_name, f'{chrom}:{j[0]}-{j[1]-1}',
                                         str(ejc_distances[w])])+'\n') 
 
-
-
-def main(options):
-
-    if options.countfile is None:
-        sys.stderr.write("Error: no LeafCutter junction file provided...\npython SpliceJunctionClassifier.py -c Leafcutter_perind.counts.gz\n")
-        exit(0)
-
-    if options.genome is None:
-        sys.stderr.write("Error: no genome fasta file selected...\npython SpliceJunctionClassifier.py -G genome.fa\n")
-        exit(0)
-
-    if options.annot is None:
-        sys.stderr.write("Error: no annotation file with gene start and stop codon...\npython SpliceJunctionClassifier.py -A gencode.gtf/ensembl.gtf\n")
-        exit(0)
-    
-    sys.stdout.write(f"Loading genome {options.genome} ...")
-    fa = pyfastx.Fasta(options.genome)
-    sys.stdout.write("done!\n")
-
-    ClassifySpliceJunction(
-        perind_file=options.countfile,
-        gtf_annot=options.annot,
-        fa = fa,
-        rundir=options.rundir,
-        outprefix=options.outprefix,
-        max_juncs=options.max_juncs,
-        verbose=options.verbose,
-    )
-
-
-
-if __name__ == "__main__":
-
-   
-
-    parser = argparse.ArgumentParser(description='SpliceJunctionClassifier')
-
-    parser.add_argument("-c", "--countfile", dest="countfile",
-                  help="LeafCutter perind counts file, e.g. leafcutter_perind.counts.gz")
-
-    parser.add_argument("-o", "--outprefix", dest="outprefix", default = 'Leaf2',
-                      help="output prefix (default: Leaf2)")
-
-    parser.add_argument("-r", "--rundir", dest="rundir", default = '.',
-                      help="run directory (default: .)")
-
-    parser.add_argument("-A", "--annotation", dest="annot",
-                  help="Annotation GTF file, for example gencode.v37.annotation.gtf.gz")
-    
-    parser.add_argument("-G", "--genome", dest="genome",
-                  help="Reference genome fasta file.")
-
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default = False,
-                      help="verbose mode")
-
-    parser.add_argument("--max_juncs", dest="max_juncs", metavar='N', default=10000, type=int,
-                  help="skip solveNMD function if gene contains more than N juncs. Juncs in skipped genes are assigned Coding=False. Default 10000")
-
-    options = parser.parse_args()
-    
-    main(options)

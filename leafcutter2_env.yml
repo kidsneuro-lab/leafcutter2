@@ -3,7 +3,6 @@ channels:
   - anaconda
   - bioconda
   - conda-forge
-  - defaults
 dependencies:
   - argparse-dataclass=2.0.0
   - biopython=1.84
@@ -11,9 +10,4 @@ dependencies:
   - pandas=2.2.3
   - pickleshare=0.7.5
   - pyfastx=2.2.0
-  - pysam=0.22.1
-  - pysftp=0.2.9
-  - pytabix=0.1
   - python=3.11.1
-  - statsmodels=0.14.4
-  - tabix=1.11
