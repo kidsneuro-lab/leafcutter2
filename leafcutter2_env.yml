@@ -1,3 +1,4 @@
+name: leafcutter2
 channels:
   - anaconda
   - bioconda

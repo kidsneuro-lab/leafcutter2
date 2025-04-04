@@ -6,7 +6,7 @@ LeafCutter2 is a tool for clustering, functional characterization and quantifica
 
 #### Prerequisites
 
-- The necessary python libraries can be installed with `leafcutter2_env.yml`.
+- All the necessary python libraries can be installed with `leafcutter2_env.yml`.
 
 ## Clustering, classifying and quantifying splice junctions
 
