@@ -6,7 +6,7 @@ LeafCutter2 is a tool for clustering, functional characterization and quantifica
 
 #### Prerequisites
 
-All the necessary python libraries can be installed in a conda envoronment with the `leafcutter2_env.yml` in this repository. You can do this by simply running:
+All the necessary python libraries can be installed in a conda envoronment with the `leafcutter2_env.yml` file in this repository. You can do this by simply running:
 
 ```
 conda env create -f leafcutter2_env.yml
