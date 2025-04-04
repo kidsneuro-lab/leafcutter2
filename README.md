@@ -6,7 +6,24 @@ LeafCutter2 is a tool for clustering, functional characterization and quantifica
 
 #### Prerequisites
 
-- All the necessary python libraries can be installed with `leafcutter2_env.yml`.
+All the necessary python libraries can be installed in a conda envoronment with the `leafcutter2_env.yml` in this repository. You can do this by simply running:
+
+```
+conda env create -f leafcutter2_env.yml
+```
+
+The environemnt can also be installed using [Mamba](https://mamba.readthedocs.io/en/latest/), which is generally faster:
+
+```
+mamba env create -f leafcutter2_env.yml
+```
+
+After creating the environment (irrespective of which method was used), you can activate it by running:
+
+```
+conda activate leafcutter2
+```
+
 
 ## Clustering, classifying and quantifying splice junctions
 
@@ -54,7 +71,7 @@ python ../scripts/leafcutter2.py \
 For classification, LeafCutter2 requires information from a GTF file. Please ensure that the features column (third column on a GTF) includes the following type of information, and that the names match:
 - `gene`
 - `transcript`
-- `CDS'
+- `CDS`
 - `start_codon`
 - `stop_codon`
 
