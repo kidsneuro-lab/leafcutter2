@@ -30,7 +30,7 @@ conda activate leafcutter2
 ### Input:
 - Splice junction BED files. They should contain at least six columns (chrom, start, end, name, score and strand), with the fifth column corresponding to the splice junction read counts. 
 - GTF annotation with genes, start codons and stop codons.
-- Genome assembly FASTA file. It must correspond to the same assembly as the GTF file.
+- Genome assembly FASTA file. It must correspond to the same assembly as the GTF file. Make sure it has an index in a [faidx file](https://www.htslib.org/doc/samtools-faidx.html) in the same directory.
 
 We recommend using the BED-formatted `.junc` files from obtained from BAM files using [regtools junctions extract](https://regtools.readthedocs.io/en/latest/commands/junctions-extract/) as input. 
 
@@ -54,7 +54,7 @@ python ../scripts/leafcutter2.py \
 
 -    `-j junction_files.txt` should be a text file listing path to each junction file, one path per line.
 -    `-r output_dir` specifies the directory of output (default is current directory, `./`). 
--    `-A annotation/chr10.gtf.gz` is a gtf file of chromosome 10 obtained from Gencode v43
+-    `-A annotation/chr10.gtf.gz` is a gtf file of chromosome 10 obtained from Gencode v43.
 -    `-G annotation/chr10.fa.gz` a FASTA file of chromosome 10 (GRCh38 assembly). 
 
 **Note:** Make sure that the chromosome names match between the BED, GTF and FASTA files.
